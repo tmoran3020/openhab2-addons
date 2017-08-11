@@ -195,5 +195,6 @@
     <module>org.openhab.binding.yeelight</module>
     <module>org.openhab.binding.zoneminder</module>
     <module>org.openhab.binding.zway</module>
+    <module>org.openhab.binding.elkalarm</module>
   </modules>
 </project>
