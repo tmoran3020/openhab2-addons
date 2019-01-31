@@ -155,6 +155,11 @@
         <feature>openhab-runtime-base</feature>
         <feature>openhab-transport-serial</feature>
         <bundle start-level="80">mvn:org.openhab.binding/org.openhab.binding.elerotransmitterstick/${project.version}</bundle>
+    </feature>    
+	
+	<feature name="openhab-binding-elkm1" description="Elk M1 Binding" version="${project.version}">
+        <feature>openhab-runtime-base</feature>
+        <bundle start-level="80">mvn:org.openhab.binding/org.openhab.binding.elkm1/${project.version}</bundle>
     </feature>
 
     <feature name="openhab-binding-enocean" description="EnOcean Binding" version="${project.version}">
