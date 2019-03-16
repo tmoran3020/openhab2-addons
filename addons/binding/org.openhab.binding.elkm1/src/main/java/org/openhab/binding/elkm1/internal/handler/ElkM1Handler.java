@@ -15,9 +15,9 @@ package org.openhab.binding.elkm1.internal.handler;
 import org.openhab.binding.elkm1.internal.elk.ElkTypeToRequest;
 
 /**
- * The Zone handler to handle updates to the zones (locations)
+ * Abstract base class for Elk things
  *
- * @author David Bennett - Initial Contribution
+ * @author Tim Moran - Initial Contribution
  */
 public interface ElkM1Handler {
 
