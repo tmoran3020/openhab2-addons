@@ -28,7 +28,7 @@ public class StringTextDescriptionReply extends ElkMessage {
 
     public StringTextDescriptionReply(String input) {
         super(ElkCommand.StringTextDescriptionReply);
-        typeResponse = ElkTypeToRequest.values()[Integer.valueOf(input.substring(0, 2), 16)];
+        typeResponse = ElkTypeToRequest.values()[Integer.valueOf(input.substring(0, 2))];
         thingNum = Integer.valueOf(input.substring(2, 5));
         text = input.substring(5).trim();
     }
