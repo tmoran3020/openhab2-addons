@@ -64,7 +64,8 @@ public enum ElkCommand {
     EthernetModuleTest("XK"),
     EthernetModuleTestAcknowledge("xk"),
     RequestVersionNumber("vn"),
-    RequestVersionNumberReply("VN");
+    RequestVersionNumberReply("VN"),
+    ELKRPConnected("RP");
 
     private final String myValue;
 

@@ -15,6 +15,7 @@ package org.openhab.binding.elkm1.internal.elk;
 import org.openhab.binding.elkm1.internal.elk.message.AlarmZoneReply;
 import org.openhab.binding.elkm1.internal.elk.message.ArmingStatusReply;
 import org.openhab.binding.elkm1.internal.elk.message.EthernetModuleTest;
+import org.openhab.binding.elkm1.internal.elk.message.ELKRPConnected;
 import org.openhab.binding.elkm1.internal.elk.message.StringTextDescriptionReply;
 import org.openhab.binding.elkm1.internal.elk.message.VersionReply;
 import org.openhab.binding.elkm1.internal.elk.message.ZoneChangeUpdate;
@@ -48,6 +49,8 @@ public class ElkMessageFactory {
                 return new ArmingStatusReply(data.getData());
             case "AZ":
                 return new AlarmZoneReply(data.data);
+            case "RP":
+                return new ELKRPConnected(data.data);
             case "SD":
                 return new StringTextDescriptionReply(data.data);
             case "VN":
