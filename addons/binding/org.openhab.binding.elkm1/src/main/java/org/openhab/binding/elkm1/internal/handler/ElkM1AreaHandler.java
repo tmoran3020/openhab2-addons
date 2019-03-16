@@ -17,13 +17,16 @@ import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.elkm1.internal.ElkM1BindingConstants;
+import org.openhab.binding.elkm1.internal.config.ElkAreaThingConfiguration;
 import org.openhab.binding.elkm1.internal.elk.ElkAlarmAreaState;
 import org.openhab.binding.elkm1.internal.elk.ElkAlarmArmUpState;
 import org.openhab.binding.elkm1.internal.elk.ElkAlarmArmedState;
+import org.openhab.binding.elkm1.internal.elk.ElkTypeToRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +36,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author David Bennett - Initial Contribution
  */
-public class ElkM1AreaHandler extends BaseThingHandler {
+public class ElkM1AreaHandler extends BaseThingHandler implements ElkM1Handler {
     private Logger logger = LoggerFactory.getLogger(ElkM1AreaHandler.class);
+    private ElkAreaThingConfiguration config;
 
     public ElkM1AreaHandler(Thing thing) {
         super(thing);
@@ -42,7 +46,21 @@ public class ElkM1AreaHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        updateStatus(ThingStatus.ONLINE);
+        config = getConfigAs(ElkAreaThingConfiguration.class);
+
+        if (validConfig(config)) {
+            updateStatus(ThingStatus.ONLINE);
+        } else {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "Elk M1 zone configuration invalid");
+        }
+    }
+
+    public boolean validConfig(ElkAreaThingConfiguration config) {
+        if (config == null || config.areaId <= 0) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -56,9 +74,9 @@ public class ElkM1AreaHandler extends BaseThingHandler {
                 ElkAlarmArmedState armed = ElkAlarmArmedState.valueOf(str.toString());
                 @SuppressWarnings("null")
                 ElkM1BridgeHandler bridgeHandler = (ElkM1BridgeHandler) getBridge().getHandler();
-                int zone = Integer.valueOf(getThing().getProperties().get(ElkM1BindingConstants.PROPERTY_ZONE_NUM));
+                int areaId = getAreaId();
                 if (bridgeHandler != null) {
-                    bridgeHandler.updateArmedState(zone, armed);
+                    bridgeHandler.updateArmedState(areaId, armed);
                 }
             }
         }
@@ -76,7 +94,7 @@ public class ElkM1AreaHandler extends BaseThingHandler {
      * @param armUp the armup state of the area
      */
     public void updateArea(ElkAlarmAreaState state, ElkAlarmArmedState armed, ElkAlarmArmUpState armUp) {
-        logger.debug("Updated Elk area config to: {}, {}, {}", state, armed, armUp);
+        logger.debug("Updated Elk area id {} config to: {}, {}, {}", getAreaId(), state, armed, armUp);
         Channel chan = getThing().getChannel(ElkM1BindingConstants.CHANNEL_AREA_STATE);
         if (chan != null) {
             updateState(chan.getUID(), new StringType(state.toString()));
@@ -89,6 +107,18 @@ public class ElkM1AreaHandler extends BaseThingHandler {
         if (chan != null) {
             updateState(chan.getUID(), new StringType(armUp.toString()));
         }
+    }
+
+    public int getAreaId() {
+        return config.areaId;
+    }
+
+    @Override
+    public boolean isThingForType(ElkTypeToRequest type, int id) {
+        if (ElkTypeToRequest.Area != type) {
+            return false;
+        }
+        return (getAreaId() == id);
     }
 
     @SuppressWarnings("null")

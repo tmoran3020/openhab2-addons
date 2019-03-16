@@ -21,7 +21,6 @@ import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.elkm1.internal.ElkM1BindingConstants;
 import org.openhab.binding.elkm1.internal.ElkM1HandlerListener;
-import org.openhab.binding.elkm1.internal.elk.ElkTypeToRequest;
 import org.openhab.binding.elkm1.internal.handler.ElkM1BridgeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,10 +60,10 @@ public class ElkM1DiscoveryHandler extends AbstractDiscoveryService implements E
         ThingUID thingUID = new ThingUID(ElkM1BindingConstants.THING_TYPE_ZONE, bridge.getThing().getUID(),
                 Integer.toString(zoneNum));
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(ElkM1BindingConstants.PROPERTY_TYPE_ID, ElkTypeToRequest.Zone.toString());
         properties.put(ElkM1BindingConstants.PROPERTY_ZONE_NUM, Integer.toString(zoneNum));
         DiscoveryResult result = DiscoveryResultBuilder.create(thingUID).withBridge(bridge.getThing().getUID())
-                .withLabel(label).withProperties(properties).build();
+                .withLabel(label).withRepresentationProperty(ElkM1BindingConstants.PROPERTY_ZONE_NUM)
+                .withProperties(properties).build();
         thingDiscovered(result);
     }
 
@@ -79,10 +78,10 @@ public class ElkM1DiscoveryHandler extends AbstractDiscoveryService implements E
         ThingUID thingUID = new ThingUID(ElkM1BindingConstants.THING_TYPE_AREA, bridge.getThing().getUID(),
                 Integer.toString(areaNum));
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(ElkM1BindingConstants.PROPERTY_TYPE_ID, ElkTypeToRequest.Area.toString());
-        properties.put(ElkM1BindingConstants.PROPERTY_ZONE_NUM, Integer.toString(areaNum));
+        properties.put(ElkM1BindingConstants.PROPERTY_AREA_NUM, Integer.toString(areaNum));
         DiscoveryResult result = DiscoveryResultBuilder.create(thingUID).withBridge(bridge.getThing().getUID())
-                .withLabel(label).withProperties(properties).build();
+                .withLabel(label).withRepresentationProperty(ElkM1BindingConstants.PROPERTY_AREA_NUM)
+                .withProperties(properties).build();
         thingDiscovered(result);
     }
 

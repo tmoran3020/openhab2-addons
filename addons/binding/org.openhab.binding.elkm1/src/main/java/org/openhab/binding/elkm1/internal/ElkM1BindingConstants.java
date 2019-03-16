@@ -45,7 +45,8 @@ public class ElkM1BindingConstants {
 
     // The properties associated with the thing
     public static final String PROPERTY_VERSION = "version";
-    public static final String PROPERTY_ZONE_NUM = "zone";
+    public static final String PROPERTY_ZONE_NUM = "zoneId";
+    public static final String PROPERTY_AREA_NUM = "areaId";
     public static final String PROPERTY_TYPE_ID = "type";
 
 }

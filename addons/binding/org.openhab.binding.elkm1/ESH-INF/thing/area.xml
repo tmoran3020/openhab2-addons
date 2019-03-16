@@ -20,6 +20,15 @@
 		<properties>
 			<property name="vendor">ELK</property>
 		</properties>
+
+		<representation-property>areaId</representation-property>
+
+		<config-description>
+	        <parameter name="areaId" type="integer" required="true">
+	            <label>Area ID</label>
+	        </parameter>
+	    </config-description>
+
 	</thing-type>
 
 	<channel-type id="areastate">

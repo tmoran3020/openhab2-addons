@@ -22,6 +22,7 @@ import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.openhab.binding.elkm1.internal.ElkM1BindingConstants;
 import org.openhab.binding.elkm1.internal.ElkM1HandlerListener;
@@ -42,8 +43,6 @@ import org.openhab.binding.elkm1.internal.elk.message.ArmToVacation;
 import org.openhab.binding.elkm1.internal.elk.message.ArmingStatus;
 import org.openhab.binding.elkm1.internal.elk.message.ArmingStatusReply;
 import org.openhab.binding.elkm1.internal.elk.message.Disarm;
-import org.openhab.binding.elkm1.internal.elk.message.EthernetModuleTest;
-import org.openhab.binding.elkm1.internal.elk.message.EthernetModuleTestReply;
 import org.openhab.binding.elkm1.internal.elk.message.StringTextDescription;
 import org.openhab.binding.elkm1.internal.elk.message.StringTextDescriptionReply;
 import org.openhab.binding.elkm1.internal.elk.message.Version;
@@ -98,12 +97,12 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
         connection = new ElkAlarmConnection(config, messageFactory);
         connection.addElkListener(this);
         if (connection.initialize()) {
+            updateStatus(ThingStatus.ONLINE);
             connection.sendCommand(new Version());
             connection.sendCommand(new ZoneDefinition());
             connection.sendCommand(new ZonePartition());
             connection.sendCommand(new ZoneStatus());
             connection.sendCommand(new ArmingStatus());
-            updateStatus(ThingStatus.ONLINE, ThingStatusDetail.CONFIGURATION_PENDING, "Requesting version from alarm");
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Unable to open socket to alarm");
         }
@@ -120,12 +119,12 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
         this.connection = new ElkAlarmConnection(getConfigAs(ElkAlarmConfig.class), messageFactory);
         connection.addElkListener(this);
         if (connection.initialize()) {
+            updateStatus(ThingStatus.ONLINE);
             connection.sendCommand(new Version());
             connection.sendCommand(new ZoneDefinition());
             connection.sendCommand(new ZonePartition());
             connection.sendCommand(new ZoneStatus());
             connection.sendCommand(new ArmingStatus());
-            updateStatus(ThingStatus.ONLINE, ThingStatusDetail.CONFIGURATION_PENDING, "Requesting version from alarm");
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Unable to open socket to alarm");
         }
@@ -156,7 +155,6 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
             VersionReply reply = (VersionReply) message;
             // Set the property.
             getThing().setProperty(ElkM1BindingConstants.PROPERTY_VERSION, reply.getElkVersion());
-            updateStatus(ThingStatus.ONLINE);
         }
         if (message instanceof ZoneStatusReply) {
             ZoneStatusReply reply = (ZoneStatusReply) message;
@@ -174,7 +172,7 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
             ZonePartitionReply reply = (ZonePartitionReply) message;
             for (int i = 0; i < ElkMessageFactory.MAX_ZONES; i++) {
                 Thing thing = getThingForType(ElkTypeToRequest.Area, reply.getAreas()[i]);
-                if (thing == null && !areas[reply.getAreas()[i] - 1]) {
+                if (thing == null && reply.getAreas()[i] != 0 && !areas[reply.getAreas()[i] - 1]) {
                     // Request the area.
                     connection.sendCommand(new StringTextDescription(ElkTypeToRequest.Area, reply.getAreas()[i]));
                     areas[reply.getAreas()[i] - 1] = true;
@@ -214,9 +212,6 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
                     handler.updateZoneConfig(reply.getConfig(), reply.getStatus());
                 }
             }
-        }
-        if (message instanceof EthernetModuleTest) {
-            connection.sendCommand(new EthernetModuleTestReply());
         }
         if (message instanceof ArmingStatusReply) {
             ArmingStatusReply reply = (ArmingStatusReply) message;
@@ -284,9 +279,11 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
      */
     Thing getThingForType(ElkTypeToRequest type, int num) {
         for (Thing thing : getThing().getThings()) {
-            Map<String, String> properties = thing.getProperties();
-            if (properties.get(ElkM1BindingConstants.PROPERTY_TYPE_ID).equals(type.toString())) {
-                if (properties.get(ElkM1BindingConstants.PROPERTY_ZONE_NUM).equals(Integer.toString(num))) {
+            ThingHandler thingHandler = thing.getHandler();
+            if (thingHandler instanceof ElkM1Handler) {
+                ElkM1Handler baseHandler = (ElkM1Handler) thingHandler;
+                if (baseHandler.isThingForType(type, num)) {
+                    logger.debug("Found thing for type {} and num {}", type.toString(), num);
                     return thing;
                 }
             }
@@ -317,26 +314,6 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
         if (!connection.isSendingClass(ArmingStatus.class)) {
             connection.sendCommand(new ArmingStatus());
         }
-    }
-
-    /**
-     * Called when an area is added to ask for the defintion and details of it.
-     *
-     * @param elkM1AreaHandler The handler for the area that is added.
-     */
-    public void onAreaAdded(ElkM1AreaHandler elkM1AreaHandler) {
-        connection.sendCommand(new ArmingStatus());
-    }
-
-    /**
-     * Called when a zone is added to ask for the definition and details of it.
-     *
-     * @param elkM1ZoneHandler The zone handle for the zone.
-     */
-    public void onZoneAdded(ElkM1ZoneHandler elkM1ZoneHandler) {
-        connection.sendCommand(new ZoneDefinition());
-        connection.sendCommand(new ZonePartition());
-        connection.sendCommand(new ZoneStatus());
     }
 
     /**

@@ -21,6 +21,15 @@
 		<properties>
 			<property name="vendor">ELK</property>
 		</properties>
+
+		<representation-property>zoneId</representation-property>
+
+		<config-description>
+            <parameter name="zoneId" type="integer" required="true">
+                <label>Zone ID</label>
+            </parameter>
+        </config-description>
+
 	</thing-type>
 
 	<channel-type id="definition">
