@@ -7,6 +7,38 @@
 	<bridge-type id="bridge">
 		<label>Elk Alarm Connection</label>
 		<description>Connection to the elk alarm</description>
+		
+		<channels>
+		    <channel typeId="general_trouble" id="general_trouble" />
+            <channel typeId="ac_fail_trouble" id="ac_fail_trouble" />
+            <channel typeId="box_tamper_trouble" id="box_tamper_trouble" />
+            <channel typeId="box_tamper_zone" id="box_tamper_zone" />
+            <channel typeId="fail_communicate_trouble" id="fail_communicate_trouble" />
+            <channel typeId="eeprom_memory_error_trouble" id="eeprom_memory_error_trouble" />
+            <channel typeId="low_battery_control_trouble" id="low_battery_control_trouble" />
+            <channel typeId="transmitter_low_battery_trouble" id="transmitter_low_battery_trouble" />
+            <channel typeId="transmitter_low_battery_zone" id="transmitter_low_battery_zone" />
+            <channel typeId="over_current_trouble" id="over_current_trouble" />
+            <channel typeId="telephone_fault_trouble" id="telephone_fault_trouble" />
+            <channel typeId="output_2_trouble" id="output_2_trouble" />
+            <channel typeId="missing_keypad_trouble" id="missing_keypad_trouble" />
+            <channel typeId="zone_expander_trouble" id="zone_expander_trouble" />
+            <channel typeId="output_expander_trouble" id="output_expander_trouble" />
+            <channel typeId="elkrp_remote_access_trouble" id="elkrp_remote_access_trouble" />
+            <channel typeId="common_area_not_armed_trouble" id="common_area_not_armed_trouble" />
+            <channel typeId="flash_memory_error_trouble" id="flash_memory_error_trouble" />
+            <channel typeId="security_alert_trouble" id="security_alert_trouble" />
+            <channel typeId="security_alert_zone" id="security_alert_zone" />
+            <channel typeId="serial_port_expander_trouble" id="serial_port_expander_trouble" />
+            <channel typeId="lost_transmitter_trouble" id="lost_transmitter_trouble" />
+            <channel typeId="lost_transmitter_zone" id="lost_transmitter_zone" />
+            <channel typeId="ge_smoke_cleanme_trouble" id="ge_smoke_cleanme_trouble" />
+            <channel typeId="ethernet_trouble" id="ethernet_trouble" />
+            <channel typeId="display_message_line1" id="display_message_line1" />
+            <channel typeId="display_message_line2" id="display_message_line2" />
+            <channel typeId="fire_trouble" id="fire_trouble" />
+            <channel typeId="fire_trouble_zone" id="fire_trouble_zone" />
+        </channels>
 
 		<config-description>
 			<parameter name="ipAddress" type="text">
@@ -20,7 +52,7 @@
 			</parameter>
 			<parameter name="pincode" type="integer">
 				<label>Pincode</label>
-				<description>The pincode to use for access to the elk alarm data.</description>
+				<description>The pincode to use for privileged actions like arming and disarming.</description>
 				<context>password</context>
 			</parameter>
 			<parameter name="useSSL" type="boolean">
@@ -39,4 +71,208 @@
 			
 		</config-description>
 	</bridge-type>
+	
+	<channel-type id="general_trouble">
+        <item-type>Switch</item-type>
+        <label>General Trouble</label>
+        <description>On if any trouble status is on.</description>
+        <state readOnly="true"/>
+    </channel-type>
+
+    <channel-type id="ac_fail_trouble">
+        <item-type>Switch</item-type>
+        <label>AC Fail Trouble</label>
+        <description>AC (power) has failed, system is running on battery backup.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="box_tamper_trouble">
+        <item-type>Switch</item-type>
+        <label>Box Tamper Trouble</label>
+        <description>Contact box (wireless) has been tampered with. Zone that was tampered with will be in box_tamper_zone.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="box_tamper_zone">
+        <item-type>String</item-type>
+        <label>Box Tamper Trouble Zone</label>
+        <description>Zone that contains contact box (wireless) which has been tampered with. </description>
+        <state readOnly="true"/>
+    </channel-type>
+        
+    <channel-type id="fail_communicate_trouble">
+        <item-type>Switch</item-type>
+        <label>Fail Communicate</label>
+        <description>Unable to communicate to the central station. A successful communication is required to clear.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="eeprom_memory_error_trouble">
+        <item-type>Switch</item-type>
+        <label>EEProm Memory Error Trouble</label>
+        <description>EEProm memory has encountered an error.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="low_battery_control_trouble">
+        <item-type>Switch</item-type>
+        <label>Low Battery Control Trouble</label>
+        <description>System backup battery low and may need to be replaced.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="transmitter_low_battery_trouble">
+        <item-type>Switch</item-type>
+        <label>Transmitter Low Battery Trouble</label>
+        <description>Wireless transmitter has low battery. Zone will be in transmitter_low_battery_trouble.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="transmitter_low_battery_zone">
+        <item-type>String</item-type>
+        <label>Transmitter Low Battery Trouble Zone</label>
+        <description>Zone that contains wireless transmitter which has low battery.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="over_current_trouble">
+        <item-type>Switch</item-type>
+        <label>Over Current Trouble</label>
+        <description>Over current condition detected. Hardware should be tested.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="telephone_fault_trouble">
+        <item-type>Switch</item-type>
+        <label>Telephone Fault Trouble</label>
+        <description>Telephone reporting line has faulted. Test telephone line, or disable if unused.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="output_2_trouble">
+        <item-type>Switch</item-type>
+        <label>Output 2 Trouble</label>
+        <description>Siren output (supervised output 2) fault. Test siren, or add resistor across output 2 if unused.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="missing_keypad_trouble">
+        <item-type>Switch</item-type>
+        <label>Missing Keypad Trouble</label>
+        <description>Keypad is missing. Check keypad connection.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="zone_expander_trouble">
+        <item-type>Switch</item-type>
+        <label>Zone Expander Trouble</label>
+        <description>Zone expander problem. Check zone expander connection.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="output_expander_trouble">
+        <item-type>Switch</item-type>
+        <label>Output Expander Trouble</label>
+        <description>Output expander problem. Check output expander connection.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="elkrp_remote_access_trouble">
+        <item-type>Switch</item-type>
+        <label>ELKRP Remote Access Trouble</label>
+        <description>ELKRP Remote Access Trouble.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="common_area_not_armed_trouble">
+        <item-type>Switch</item-type>
+        <label>Common Area Not Armed Trouble</label>
+        <description>Common Area Not Armed Trouble.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="flash_memory_error_trouble">
+        <item-type>Switch</item-type>
+        <label>Flash Memory Error Trouble</label>
+        <description>Flash memory has encountered an error.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="security_alert_trouble">
+        <item-type>Switch</item-type>
+        <label>Security Alert Trouble</label>
+        <description>Security alert. Zone will be in security_alert_zone.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="security_alert_zone">
+        <item-type>String</item-type>
+        <label>Security Alert Zone</label>
+        <description>Zone that contains security alert. Check zone for problems.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="serial_port_expander_trouble">
+        <item-type>Switch</item-type>
+        <label>Serial Port Expander Trouble</label>
+        <description>Serial port expander problem. Check serial port expander connection.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="lost_transmitter_trouble">
+        <item-type>Switch</item-type>
+        <label>Lost Transmitter Trouble</label>
+        <description>Transmitter is not communicating. Zone of lost transmitter will be in lost_transmitter_zone.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="lost_transmitter_zone">
+        <item-type>String</item-type>
+        <label>Lost Transmitter Zone</label>
+        <description>Zone that contains wireless transmitter that has been lost.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="ge_smoke_cleanme_trouble">
+        <item-type>Switch</item-type>
+        <label>GE Smoke CleanMe Trouble</label>
+        <description>GE smoke detector optical port needs replacement.</description>
+        <state readOnly="true"/>
+    </channel-type>
+
+    <channel-type id="ethernet_trouble">
+        <item-type>Switch</item-type>
+        <label>Ethernet Trouble</label>
+        <description>Ethernet expansion module trouble or reporting over ethernet problem.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="display_message_line1">
+        <item-type>Switch</item-type>
+        <label>Display Message Line 1</label>
+        <description>Message is displayed in line 1.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="display_message_line2">
+        <item-type>Switch</item-type>
+        <label>Display Message Line 2</label>
+        <description>Message is displayed in line 2.</description>
+        <state readOnly="true"/>
+    </channel-type>
+        
+    <channel-type id="fire_trouble">
+        <item-type>Switch</item-type>
+        <label>Fire Trouble</label>
+        <description>Fire trouble. Zone will be in fire_trouble_zone.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
+    <channel-type id="fire_trouble_zone">
+        <item-type>String</item-type>
+        <label>Fire Zone</label>
+        <description>Zone that contains fire trouble.</description>
+        <state readOnly="true"/>
+    </channel-type>
+    
 </thing:thing-descriptions>

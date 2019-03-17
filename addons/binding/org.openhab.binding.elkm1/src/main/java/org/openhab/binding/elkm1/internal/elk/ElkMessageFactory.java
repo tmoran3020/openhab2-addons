@@ -14,9 +14,10 @@ package org.openhab.binding.elkm1.internal.elk;
 
 import org.openhab.binding.elkm1.internal.elk.message.AlarmZoneReply;
 import org.openhab.binding.elkm1.internal.elk.message.ArmingStatusReply;
-import org.openhab.binding.elkm1.internal.elk.message.EthernetModuleTest;
 import org.openhab.binding.elkm1.internal.elk.message.ELKRPConnected;
+import org.openhab.binding.elkm1.internal.elk.message.EthernetModuleTest;
 import org.openhab.binding.elkm1.internal.elk.message.StringTextDescriptionReply;
+import org.openhab.binding.elkm1.internal.elk.message.SystemTroubleStatusReply;
 import org.openhab.binding.elkm1.internal.elk.message.VersionReply;
 import org.openhab.binding.elkm1.internal.elk.message.ZoneChangeUpdate;
 import org.openhab.binding.elkm1.internal.elk.message.ZoneDefitionReply;
@@ -65,6 +66,8 @@ public class ElkMessageFactory {
                 return new ZonePartitionReply(data.data);
             case "ZS":
                 return new ZoneStatusReply(data.data);
+            case "SS":
+                return new SystemTroubleStatusReply(data.data);
         }
         return null;
     }

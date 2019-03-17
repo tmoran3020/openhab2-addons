@@ -16,7 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.Bridge;
+import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -24,6 +27,7 @@ import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
+import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.elkm1.internal.ElkM1BindingConstants;
 import org.openhab.binding.elkm1.internal.ElkM1HandlerListener;
 import org.openhab.binding.elkm1.internal.config.ElkAlarmConfig;
@@ -45,6 +49,8 @@ import org.openhab.binding.elkm1.internal.elk.message.ArmingStatusReply;
 import org.openhab.binding.elkm1.internal.elk.message.Disarm;
 import org.openhab.binding.elkm1.internal.elk.message.StringTextDescription;
 import org.openhab.binding.elkm1.internal.elk.message.StringTextDescriptionReply;
+import org.openhab.binding.elkm1.internal.elk.message.SystemTroubleStatus;
+import org.openhab.binding.elkm1.internal.elk.message.SystemTroubleStatusReply;
 import org.openhab.binding.elkm1.internal.elk.message.Version;
 import org.openhab.binding.elkm1.internal.elk.message.VersionReply;
 import org.openhab.binding.elkm1.internal.elk.message.ZoneChangeUpdate;
@@ -80,7 +86,9 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        // Needed to instantiate class
+        if (command instanceof RefreshType) {
+            connection.sendCommand(new SystemTroubleStatus());
+        }
     }
 
     /**
@@ -88,6 +96,7 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
      */
     @Override
     public void initialize() {
+        logger.debug("Intializing Elk M1");
         // Long running initialization should be done asynchronously in background.
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING, "Opening alarm connection");
 
@@ -103,6 +112,7 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
             connection.sendCommand(new ZonePartition());
             connection.sendCommand(new ZoneStatus());
             connection.sendCommand(new ArmingStatus());
+            connection.sendCommand(new SystemTroubleStatus());
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Unable to open socket to alarm");
         }
@@ -113,6 +123,7 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
      */
     @Override
     public void handleConfigurationUpdate(Map<String, Object> configurationParameters) {
+        logger.debug("Reconnecting to Elk M1 after configuration update");
         super.handleConfigurationUpdate(configurationParameters);
         this.connection.removeElkListener(this);
         this.connection.shutdown();
@@ -125,6 +136,7 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
             connection.sendCommand(new ZonePartition());
             connection.sendCommand(new ZoneStatus());
             connection.sendCommand(new ArmingStatus());
+            connection.sendCommand(new SystemTroubleStatus());
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Unable to open socket to alarm");
         }
@@ -250,6 +262,9 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
                     break;
             }
         }
+        if (message instanceof SystemTroubleStatusReply) {
+            updateTroubleStatus((SystemTroubleStatusReply) message);
+        }
     }
 
     /**
@@ -349,4 +364,70 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
                 break;
         }
     }
+
+    public void updateTroubleStatus(SystemTroubleStatusReply message) {
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_GENERAL_TROUBLE, message.isGeneralTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_AC_TROUBLE, message.isAcFailTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_BOX_TAMPER_TROUBLE, message.isBoxTamperTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_BOX_TAMPER_ZONE, message.getBoxTamperZone());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_FAIL_COMMUNICATE_TROUBLE,
+                message.isFailToCommunicate());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_EEPROM_MEMORY_TROUBLE,
+                message.isEepromMemoryErrorTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_LOW_BATTERY_TROUBLE,
+                message.isLowBatteryControlTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_TRANSMITTER_LOW_BATTERY_TROUBLE,
+                message.isTransmitterLowBatteryTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_TRANSMITTER_LOW_BATTERY_ZONE,
+                message.getTransmitterLowBatteryZone());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_OVER_CURRENT_TROUBLE, message.isOverCurrentTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_TELEPHONE_FAULT_TROUBLE,
+                message.isTelephoneFaultTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_OUTPUT_2_TROUBLE, message.isOutput2Trouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_MISSING_KEYPAD_TROUBLE,
+                message.isMissingKeypadTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_ZONE_EXPANDER_TROUBLE,
+                message.isZoneExpanderTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_OUTPUT_EXPANDER_TROUBLE,
+                message.isOutputExpanderTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_ELKRP_REMOTE_ACCESS_TROUBLE,
+                message.isELKRPRemoteAccessTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_COMMON_AREA_NOT_ARMED_TROUBLE,
+                message.isCommonAreaNotArmedTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_FLASH_MEMORY_ERROR_TROUBLE,
+                message.isFlashMemoryErrorTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_SECURITY_ALERT_TROUBLE,
+                message.isSecurityAlertTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_SECURITY_ALERT_ZONE, message.getSecurityAlertZone());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_SERIAL_PORT_EXPANDER_TROUBLE,
+                message.isSerialPortExpanderTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_LOST_TRANSMITTER_TROUBLE,
+                message.isLostTransmitterTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_LOST_TRANSMITTER_ZONE,
+                message.getLostTransmitterZone());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_GE_SMOKE_CLEANME_TROUBLE,
+                message.isGESmokeCleanMeTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_ETHERNET_TROUBLE, message.isEthernetTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_DISPLAY_MESSAGE_LINE1,
+                message.isDisplayMessageLine1());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_DISPLAY_MESSAGE_LINE2,
+                message.isDisplayMessageLine2());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_FIRE_TROUBLE, message.isFireTrouble());
+        updateBridgeChannel(ElkM1BindingConstants.CHANNEL_BRIDGE_FIRE_TROUBLE_ZONE, message.getFireTroubleZone());
+    }
+
+    private void updateBridgeChannel(String channel, boolean isTrouble) {
+        Channel chan = getThing().getChannel(channel);
+        if (chan != null) {
+            updateState(chan.getUID(), OnOffType.from(isTrouble));
+        }
+    }
+
+    private void updateBridgeChannel(String channel, String zone) {
+        Channel chan = getThing().getChannel(channel);
+        if (chan != null) {
+            updateState(chan.getUID(), StringType.valueOf(zone));
+        }
+    }
+
 }
