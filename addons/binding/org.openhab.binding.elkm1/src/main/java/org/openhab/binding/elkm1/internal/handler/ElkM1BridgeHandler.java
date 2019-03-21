@@ -12,9 +12,12 @@
  */
 package org.openhab.binding.elkm1.internal.handler;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.StringType;
@@ -76,6 +79,9 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
     private ElkMessageFactory messageFactory;
     private boolean[] areas = new boolean[ElkMessageFactory.MAX_AREAS];
     private List<ElkM1HandlerListener> listeners = new ArrayList<ElkM1HandlerListener>();
+    private ScheduledFuture<?> reconnectFuture;
+    private long lastConnectionInEpochSeconds;
+    private int RESCHEDULE_LAG_SECONDS = 10;
 
     public ElkM1BridgeHandler(Bridge thing) {
         super(thing);
@@ -107,15 +113,28 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
         connection.addElkListener(this);
         if (connection.initialize()) {
             updateStatus(ThingStatus.ONLINE);
-            connection.sendCommand(new Version());
-            connection.sendCommand(new ZoneDefinition());
-            connection.sendCommand(new ZonePartition());
-            connection.sendCommand(new ZoneStatus());
-            connection.sendCommand(new ArmingStatus());
-            connection.sendCommand(new SystemTroubleStatus());
+            refreshBridge();
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Unable to open socket to alarm");
+            // May be temporary, try to reconnect
+            scheduleReconnect();
         }
+    }
+
+    private void scheduleReconnect() {
+        if (this.reconnectFuture != null) {
+            // If we have a reconnect already running, cancel it out and schedule a new one for later
+            this.reconnectFuture.cancel(false);
+        }
+        this.reconnectFuture = this.scheduler.schedule(new Runnable() {
+            @Override
+            public void run() {
+                logger.info("Reconnecting to Elk M1 due to initialization or heartbeat failure.");
+                reconnect();
+            }
+            // We should get at minimum an Ethernet Test every thirty seconds, give it a bit longer just in case
+        }, 60, TimeUnit.SECONDS);
+
     }
 
     /**
@@ -125,21 +144,31 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
     public void handleConfigurationUpdate(Map<String, Object> configurationParameters) {
         logger.debug("Reconnecting to Elk M1 after configuration update");
         super.handleConfigurationUpdate(configurationParameters);
+        reconnect();
+    }
+
+    private void reconnect() {
         this.connection.removeElkListener(this);
         this.connection.shutdown();
         this.connection = new ElkAlarmConnection(getConfigAs(ElkAlarmConfig.class), messageFactory);
         connection.addElkListener(this);
         if (connection.initialize()) {
             updateStatus(ThingStatus.ONLINE);
-            connection.sendCommand(new Version());
-            connection.sendCommand(new ZoneDefinition());
-            connection.sendCommand(new ZonePartition());
-            connection.sendCommand(new ZoneStatus());
-            connection.sendCommand(new ArmingStatus());
-            connection.sendCommand(new SystemTroubleStatus());
+            refreshBridge();
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Unable to open socket to alarm");
+            // May be temporary, try to reconnect
+            scheduleReconnect();
         }
+    }
+
+    private void refreshBridge() {
+        connection.sendCommand(new Version());
+        connection.sendCommand(new ZoneDefinition());
+        connection.sendCommand(new ZonePartition());
+        connection.sendCommand(new ZoneStatus());
+        connection.sendCommand(new ArmingStatus());
+        connection.sendCommand(new SystemTroubleStatus());
     }
 
     /**
@@ -163,6 +192,10 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
     @Override
     public void handleElkMessage(ElkMessage message) {
         logger.debug("Got Elk Message: {}", message.toString());
+
+        // We're still alive, reset the heatbeat listener
+        handleHeartbeat();
+
         if (message instanceof VersionReply) {
             VersionReply reply = (VersionReply) message;
             // Set the property.
@@ -264,6 +297,20 @@ public class ElkM1BridgeHandler extends BaseBridgeHandler implements ElkListener
         }
         if (message instanceof SystemTroubleStatusReply) {
             updateTroubleStatus((SystemTroubleStatusReply) message);
+        }
+    }
+
+    /**
+     * Handle heartbeat communications
+     */
+    private void handleHeartbeat() {
+        // We sometimes get waves of updates, no need to reset the future for each message. Give it a lag time before
+        // we go ahead and reschedule
+        if (Instant.now().getEpochSecond() - this.lastConnectionInEpochSeconds < RESCHEDULE_LAG_SECONDS) {
+            return;
+        } else {
+            this.lastConnectionInEpochSeconds = Instant.now().getEpochSecond();
+            scheduleReconnect();
         }
     }
 
