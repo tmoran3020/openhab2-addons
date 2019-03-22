@@ -36,7 +36,8 @@ Lastly, there is an optional `pincode` configuration parameter. This is the 4 (o
 Example definition (from the thing file):
 
 ```
-Thing elkm1:bridge:m1gold [ ipAddress="192.168.0.10", port="2601", pincode="1234", username="myusername", password="mypassword", useSSL="true" ]
+Thing elkm1:bridge:m1gold [ ipAddress="192.168.0.10", port="2601", pincode="1234", 
+     username="myusername", password="mypassword", useSSL="true" ]
 ```
 
 ### Zone
@@ -195,7 +196,7 @@ Note: This is the only channel that can be updated. Setting this to a new value 
 * **PhoneKey**
 * **IntercomKey**
 
-For more information on the operating characteristics of each type of zone, see the Elk M1 Installation Manual [link, login required](https://www.elkproducts.com/_literature_63668/ELK-M1G_Installation_Manual), page 30.
+For more information on the operating characteristics of each type of zone, see the Elk M1 Installation Manual [link](https://www.elkproducts.com/_literature_63668/ELK-M1G_Installation_Manual) (login required), page 30.
 
 (6) - Status will be one of the following strings:
 * **Normal** - Zone is in normal state (safe)
